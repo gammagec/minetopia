@@ -21,20 +21,20 @@ func SyncClientMods(cfg *config.Config, modsDir string) error {
 	}
 
 	mods := cfg.ClientMods()
-	fmt.Printf("Syncing %d mod(s) to %s\n", len(mods), modsDir)
+	fmt.Printf("Syncing %d mod(s) for MC %s/%s to %s\n", len(mods), cfg.Minecraft.Version, cfg.Minecraft.Modloader, modsDir)
 
 	for _, mod := range mods {
-		if err := syncMod(mod, modsDir); err != nil {
+		if err := syncMod(mod, modsDir, cfg.Minecraft.Version, cfg.Minecraft.Modloader); err != nil {
 			return fmt.Errorf("%s: %w", mod.Name, err)
 		}
 	}
 	return nil
 }
 
-func syncMod(mod config.Mod, modsDir string) error {
+func syncMod(mod config.Mod, modsDir, mcVersion, loader string) error {
 	switch mod.Source {
 	case "modrinth":
-		return syncModrinth(mod, modsDir)
+		return syncModrinth(mod, modsDir, mcVersion, loader)
 	case "url":
 		return syncURL(mod, modsDir)
 	default:
@@ -42,8 +42,8 @@ func syncMod(mod config.Mod, modsDir string) error {
 	}
 }
 
-func syncModrinth(mod config.Mod, modsDir string) error {
-	ver, err := modrinth.GetProjectVersion(mod.ProjectID, mod.Version)
+func syncModrinth(mod config.Mod, modsDir, mcVersion, loader string) error {
+	ver, err := modrinth.GetVersion(mod.ProjectID, mcVersion, loader, mod.Version)
 	if err != nil {
 		return err
 	}
@@ -56,11 +56,11 @@ func syncModrinth(mod config.Mod, modsDir string) error {
 	expectedHash := file.Hashes["sha512"]
 
 	if upToDate(dest, expectedHash) {
-		fmt.Printf("  [OK] %s\n", mod.Name)
+		fmt.Printf("  [OK] %s %s\n", mod.Name, ver.VersionNumber)
 		return nil
 	}
 
-	fmt.Printf("  [DL] %s ...\n", mod.Name)
+	fmt.Printf("  [DL] %s %s ...\n", mod.Name, ver.VersionNumber)
 	data, err := download(file.URL)
 	if err != nil {
 		return err

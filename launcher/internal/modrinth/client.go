@@ -26,11 +26,18 @@ type File struct {
 	Size     int64             `json:"size"`
 }
 
-// GetProjectVersion fetches the version matching versionNumber for the given project slug or ID.
-func GetProjectVersion(projectID, versionNumber string) (*Version, error) {
-	u := fmt.Sprintf("%s/project/%s/version?%s", baseURL, projectID,
-		url.Values{"version_number": {versionNumber}}.Encode())
+// GetVersion fetches versions for a project filtered by MC version and loader.
+// If versionNumber is non-empty, it additionally filters to that exact version.
+// Returns the first (newest) matching version.
+func GetVersion(projectID, mcVersion, loader, versionNumber string) (*Version, error) {
+	q := url.Values{}
+	q.Set("game_versions", `["`+mcVersion+`"]`)
+	q.Set("loaders", `["`+loader+`"]`)
+	if versionNumber != "" {
+		q.Set("version_number", versionNumber)
+	}
 
+	u := fmt.Sprintf("%s/project/%s/version?%s", baseURL, projectID, q.Encode())
 	req, _ := http.NewRequest(http.MethodGet, u, nil)
 	req.Header.Set("User-Agent", userAgent)
 
@@ -49,9 +56,17 @@ func GetProjectVersion(projectID, versionNumber string) (*Version, error) {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 	if len(versions) == 0 {
-		return nil, fmt.Errorf("version %q not found for project %s", versionNumber, projectID)
+		if versionNumber != "" {
+			return nil, fmt.Errorf("version %q not found for project %s on MC %s/%s", versionNumber, projectID, mcVersion, loader)
+		}
+		return nil, fmt.Errorf("no compatible versions for project %s on MC %s/%s", projectID, mcVersion, loader)
 	}
-	return &versions[0], nil
+
+	ver := &versions[0]
+	if versionNumber != "" && ver.VersionNumber != versionNumber {
+		return nil, fmt.Errorf("pinned version %q not found for project %s; got %s", versionNumber, projectID, ver.VersionNumber)
+	}
+	return ver, nil
 }
 
 // PrimaryFile returns the primary file from the version, or the first file if none is marked primary.
