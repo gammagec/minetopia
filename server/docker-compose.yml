@@ -1,0 +1,42 @@
+services:
+  mod-sync:
+    image: python:3.11-slim
+    command: >
+      sh -c "pip install requests pyyaml -q &&
+             python3 /scripts/mod-sync.py /config/mods.yml /mods"
+    volumes:
+      - ./scripts/mod-sync.py:/scripts/mod-sync.py:ro
+      - ../mods.yml:/config/mods.yml:ro
+      - mods:/mods
+
+  minecraft:
+    image: itzg/minecraft-server:latest
+    depends_on:
+      mod-sync:
+        condition: service_completed_successfully
+    environment:
+      EULA: "TRUE"
+      VERSION: "${MC_VERSION:-1.21.1}"
+      TYPE: FABRIC
+      FABRIC_LOADER_VERSION: "${FABRIC_VERSION:-0.16.9}"
+      MEMORY: "${MC_MEMORY:-4G}"
+      MAX_PLAYERS: "${MAX_PLAYERS:-20}"
+      MOTD: "${MOTD:-Minetopia}"
+      DIFFICULTY: "${DIFFICULTY:-normal}"
+      MODE: "${GAMEMODE:-survival}"
+      ONLINE_MODE: "${ONLINE_MODE:-true}"
+      REMOVE_OLD_MODS: "FALSE"
+      ENABLE_RCON: "true"
+      RCON_PASSWORD: "${RCON_PASSWORD:-changeme}"
+    volumes:
+      - ./data:/data
+      - mods:/data/mods
+    ports:
+      - "25565:25565"
+      - "25575:25575"
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  mods:

@@ -1,0 +1,45 @@
+minecraft:
+  version: "1.21.1"
+  modloader: "fabric"
+  modloader_version: "0.16.9"
+
+# side: both (default) | client | server
+mods:
+  - name: "Fabric API"
+    source: "modrinth"
+    project_id: "P7dR8mSH"
+    version: "0.119.2+1.21.1"
+    side: "both"
+
+  - name: "Sodium"
+    source: "modrinth"
+    project_id: "AANobbMI"
+    version: "mc1.21.1-0.6.9-fabric"
+    side: "client"
+
+  - name: "Lithium"
+    source: "modrinth"
+    project_id: "gvQqBUqZ"
+    version: "mc1.21.1-0.13.0"
+    side: "server"
+
+  - name: "Iris Shaders"
+    source: "modrinth"
+    project_id: "YL57xq9U"
+    version: "1.8.0+1.21.1"
+    side: "client"
+
+  # Direct URL example:
+  # - name: "My Custom Mod"
+  #   source: "url"
+  #   url: "https://example.com/mymod-1.0.0.jar"
+  #   filename: "mymod-1.0.0.jar"
+  #   side: "both"
+
+server:
+  memory: "4G"
+  max_players: 20
+  motd: "Minetopia - Welcome!"
+  difficulty: "normal"
+  gamemode: "survival"
+  online_mode: true

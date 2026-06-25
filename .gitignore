@@ -1,0 +1,9 @@
+server/data/
+launcher/dist/
+launcher/vendor/
+
+*.jar
+*.log
+*.tmp
+
+.env
