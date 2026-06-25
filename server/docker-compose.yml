@@ -10,7 +10,7 @@ services:
       - mods:/mods
 
   minecraft:
-    image: itzg/minecraft-server:latest
+    image: itzg/minecraft-server:java21
     depends_on:
       mod-sync:
         condition: service_completed_successfully
